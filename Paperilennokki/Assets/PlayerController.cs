@@ -4,16 +4,26 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    public float speed;
+    public float MaxSpeed;
     Rigidbody rb;
     float roll;
     float pitch;
     public float responsiveness;
     float lift;
-    public float liftModifier;
+    public float rollConstant;
+
+    public float maxFlightTime;
+    float flightTime;
+
+    public float flightTimePercentage;
+
+    public float speed;
 
     void Start()
     {
+        flightTime = maxFlightTime;
+
+        speed = MaxSpeed;
 
         rb = GetComponent<Rigidbody>();
     }
@@ -26,24 +36,31 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        GetInputs();
+        if(flightTime > 0)
+        {
+            flightTime -= Time.deltaTime;
+        }
 
-        lift = rb.velocity.magnitude * liftModifier;
+        flightTimePercentage = flightTime / maxFlightTime;
+
+        speed = MaxSpeed * flightTimePercentage;
+
+        GetInputs();
     }
 
     private void FixedUpdate()
     {
 
-        //lift
-        rb.AddForce(Vector3.up * 9.81f);
+        rb.AddForce(Vector3.up * 9.81f * (0.75f + flightTimePercentage/4));
 
 
-        //forwards speed
         transform.Translate(0, 0, speed);
+
+        //rb.AddRelativeForce(0, 0, speed * 100);
 
 
         //rotation
-        rb.AddTorque(transform.forward * roll * responsiveness);
+        rb.AddTorque(transform.forward * roll * responsiveness * rollConstant);
         rb.AddTorque(transform.right * pitch * responsiveness);
 
     }
